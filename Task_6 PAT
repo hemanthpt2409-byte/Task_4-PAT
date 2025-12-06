@@ -1,0 +1,224 @@
+#1 Bank Statement Genearator
+
+class BankAccount:
+    """Base class representing a generic bank account."""
+
+    def __init__(self, account_number: str, opening_balance: float = 0.0):
+        self._account_number = str(account_number)     # Encapsulated
+        self._balance = float(opening_balance)         # Encapsulated
+
+    @property
+    def account_number(self):
+        return self._account_number
+
+    @property
+    def balance(self):
+        return self._balance
+
+    def deposit(self, amount: float):
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive.")
+        self._balance += amount
+
+    def _can_withdraw(self, amount: float) -> bool:
+        """To be customized by subclasses."""
+        return 0 < amount <= self._balance
+
+    def withdraw(self, amount: float):
+        if not self._can_withdraw(amount):
+            raise ValueError("Withdrawal not permitted.")
+        self._balance -= amount
+
+
+class SavingsAccount(BankAccount):
+    """Savings account with an interest rate."""
+
+    def __init__(self, account_number: str, opening_balance: float = 0.0,
+                 interest_rate: float = 0.0):
+        super().__init__(account_number, opening_balance)
+        self._interest_rate = float(interest_rate)
+
+    @property
+    def interest_rate(self):
+        return self._interest_rate
+
+    def calculate_interest(self, years: float = 1.0) -> float:
+        if years < 0:
+            raise ValueError("Years cannot be negative.")
+        return self.balance * (self._interest_rate / 100) * years
+
+    def apply_interest(self, years: float = 1.0):
+        self._balance += self.calculate_interest(years)
+
+
+class CurrentAccount(BankAccount):
+    """Current account with minimum balance enforcement."""
+
+    def __init__(self, account_number: str, opening_balance: float = 0.0,
+                 minimum_balance: float = 0.0):
+        super().__init__(account_number, opening_balance)
+        self._minimum_balance = float(minimum_balance)
+
+    @property
+    def minimum_balance(self):
+        return self._minimum_balance
+
+    def _can_withdraw(self, amount: float) -> bool:
+        if amount <= 0:
+            return False
+        return (self.balance - amount) >= self._minimum_balance
+
+# Savings Account Demo
+s = SavingsAccount("SA101", 1000, interest_rate=5)
+s.deposit(500)
+s.apply_interest(1)
+
+print("Savings Account Details")
+print("Account Number:", s.account_number)
+print("Balance:", s.balance)
+print()
+
+# Current Account Demo
+c = CurrentAccount("CA201", 2000, minimum_balance=500)
+c.withdraw(1000)
+
+print("Current Account Details")
+print("Account Number:", c.account_number)
+print("Balance:", c.balance)
+
+
+#2 Employee Management System
+class Employee:
+    """Base class for any employee."""
+
+    def __init__(self, name: str, base_salary: float):
+        self._name = name
+        self._base_salary = float(base_salary)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def base_salary(self):
+        return self._base_salary
+
+    def calculate_salary(self) -> float:
+        """Default salary. Subclasses override."""
+        return self._base_salary
+
+
+class RegularEmployee(Employee):
+    """Regular employee with fixed allowance."""
+
+    def __init__(self, name: str, base_salary: float, allowance: float = 0.0):
+        super().__init__(name, base_salary)
+        self._allowance = float(allowance)
+
+    def calculate_salary(self) -> float:
+        return self.base_salary + self._allowance
+
+
+class ContractEmployee(Employee):
+    """Employee paid based on hourly rate."""
+    def __init__(self, name: str, hourly_rate: float, hours: float):
+        super().__init__(name, hourly_rate)
+        self._hours = float(hours)
+
+    def calculate_salary(self) -> float:
+        return self.base_salary * self._hours
+
+
+class Manager(Employee):
+    """Manager with bonus percentage."""
+    def __init__(self, name: str, base_salary: float, bonus_percent: float = 0.0):
+        super().__init__(name, base_salary)
+        self._bonus_percent = float(bonus_percent)
+
+    def calculate_salary(self) -> float:
+        bonus = self.base_salary * (self._bonus_percent / 100)
+        return self.base_salary + bonus
+
+
+print("------ Employee Management Output ------")
+
+e1 = RegularEmployee("John", 30000, allowance=5000)
+e2 = ContractEmployee("Anu", 500, hours=40)
+e3 = Manager("Ravi", 60000, bonus_percent=10)
+
+print("Regular Employee Salary:", e1.calculate_salary())
+print("Contract Employee Salary:", e2.calculate_salary())
+print("Manager Salary:", e3.calculate_salary())
+
+#3 Vehicle Rental System
+
+class Vehicle:
+    """Base class for all vehicles."""
+
+    def __init__(self, model: str, rental_rate: float):
+        self._model = model
+        self._rental_rate = float(rental_rate)
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def rental_rate(self):
+        return self._rental_rate
+
+    def calculate_rental(self, days: int) -> float:
+        return self._rental_rate * days
+
+
+class Car(Vehicle):
+    """Car rental with insurance fee."""
+
+    def __init__(self, model: str, rental_rate: float, insurance_fee: float = 0.0):
+        super().__init__(model, rental_rate)
+        self._insurance_fee = float(insurance_fee)
+
+    def calculate_rental(self, days: int) -> float:
+        base = self.rental_rate * days
+        return base + self._insurance_fee
+
+
+class Bike(Vehicle):
+    """Bike rental with long-term discount."""
+
+    def __init__(self, model: str, rental_rate: float, discount_percent: float = 0.0):
+        super().__init__(model, rental_rate)
+        self._discount_percent = float(discount_percent)
+
+    def calculate_rental(self, days: int) -> float:
+        cost = self.rental_rate * days
+        if days >= 7:
+            discount = cost * (self._discount_percent / 100)
+            cost -= discount
+        return cost
+
+
+class Truck(Vehicle):
+    """Truck rental with load charge per ton."""
+
+    def __init__(self, model: str, rental_rate: float,
+                 load_charge: float, tons: float):
+        super().__init__(model, rental_rate)
+        self._load_charge = float(load_charge)
+        self._tons = float(tons)
+
+    def calculate_rental(self, days: int) -> float:
+        base = self.rental_rate * days
+        load_cost = self._load_charge * self._tons * days
+        return base + load_cost
+
+
+print("\n------ Vehicle Rental Output ------")
+
+v1 = Car("Honda City", 1500, insurance_fee=300)
+v2 = Bike("Royal Enfield", 500, discount_percent=10)
+v3 = Truck("TATA 407", 2000, load_charge=150, tons=3)
+
+print("Car Rental (5 days):", v1.calculate_rental(5))
+print("Bike Rental (8 days):", v2.calculate_rental(8))
+print("Truck Rental (2 days):", v3.calculate_rental(2))
